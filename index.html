@@ -333,10 +333,15 @@
     left:16%;bottom:0%;
     transform:translateX(-50%);
   }
+  /* Narrower bubble — "Well done!" is short, so the full 34% width left a lot
+     of empty space. left/top are recomputed for the smaller width so the tail
+     tip still lands on the genie's turban: tail_x = center − 0.346·W stays at
+     ~16% (the genie), and the bubble drops slightly to keep tail_y on the head
+     as its height shrinks. */
   #doneGuide .thought{
     position:absolute;
-    left:27.8%;top:32.6%;
-    width:34%;
+    left:25.4%;top:36.6%;
+    width:27%;
     aspect-ratio:856/274;
     transform:translateX(-50%) scaleX(-1);
   }
@@ -558,6 +563,12 @@
   .counter-number,
   .summary-number{
     left:calc(47% + 10px);
+  }
+  /* "1" is a narrow glyph whose visible stroke sits right within its box, so
+     at the shared offset it reads as off-centre to the right. Nudge it left so
+     it lands on the pearl like the wider digits. Toggled in JS by digit value. */
+  .counter-number.digit-one{
+    left:calc(47% + 6px);
   }
   .counter-number{font-size:clamp(62px,5.2vw,102px);}
   .summary-number{
@@ -1976,7 +1987,13 @@ async function runChoosePondGuide(isNext = false){
   guide.style.display = 'none';
   setGuideLock(false);
 
-  armIdleNudge(firstAvail, 3000);
+  /* On the FIRST "Choose a pond!" screen, nudge toward the pink pond if the
+     child hesitates. The later "Choose the next pond!" screens get no hand —
+     their remaining ponds already pulse/glow to show what's tappable. */
+  if (!isNext){
+    const pinkPond = document.querySelector('.pond[data-color="pink"]');
+    armIdleNudge(pinkPond, 3000);
+  }
 }
 
 document.querySelectorAll('.pond').forEach(p => {
@@ -2052,7 +2069,7 @@ async function startCounting(color){
   document.getElementById('counterRow').innerHTML = '';
   const numEl = document.getElementById('counterNum');
   numEl.textContent = '0';
-  numEl.classList.remove('pop');
+  numEl.classList.remove('pop', 'digit-one');
 
   buildSinglePond(color);
 
@@ -2219,6 +2236,7 @@ function onFishTap(e, fishEl){
     currentCount++;
     const numEl = document.getElementById('counterNum');
     numEl.textContent = currentCount;
+    numEl.classList.toggle('digit-one', currentCount === 1);
     numEl.classList.remove('pop');
     void numEl.offsetWidth;
     numEl.classList.add('pop');
@@ -2288,13 +2306,11 @@ async function onPondComplete(){
 }
 
 /* Lightweight return to the selection screen for the 2nd+ ponds — no genie,
-   no speech, no interaction lock. Glow ALL remaining ponds and arm the idle
-   hand nudge in case the child hesitates. */
+   no speech, no interaction lock. Glow ALL remaining ponds; no idle hand-nudge
+   here since the pulsing ponds already show what's tappable. */
 function returnToPondSelection(){
   document.getElementById('chooseGuide').style.display = 'none';
-  const firstAvail = document.querySelector('.pond:not(.completed)');
   pulseRemainingPonds();
-  armIdleNudge(firstAvail, 2500);
 }
 
 /* A short rising "ta-da" ping for each star as it pops in. */
@@ -2612,10 +2628,15 @@ preloadImages();
 /* ============ INIT ============ */
 fillSelectionPonds();
 
-/* Greet the child with the banner VO automatically, 0.5s after the page
-   loads. Falls back to playing on the first interaction if autoplay is
-   blocked by the browser. */
-setTimeout(tryAutoplayBannerVO, 500);
+/* 0.5s after the page loads, start the background music and greet the child
+   with the banner VO. Both attempt to autoplay; if the browser blocks audio
+   until a user gesture, startBgMusic retries on the first interaction and the
+   banner line falls back the same way. */
+setTimeout(() => {
+  ensureAudio();
+  startBgMusic();
+  tryAutoplayBannerVO();
+}, 500);
 
 /* First tap anywhere on the banner scene only unlocks audio (required by
    browser autoplay policy) — it does NOT replay the banner line. Taps on the
