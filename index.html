@@ -35,7 +35,7 @@
     height:min(100dvh,56.25dvw);
     aspect-ratio:16/9;
     overflow:hidden;
-    background:url('assets/bg.png') center / cover no-repeat;
+    background:url('assets/bg.webp') center / cover no-repeat;
   }
 
   /* ===== Hard override: ponds must be flat — no drop shadows anywhere ===== */
@@ -208,7 +208,7 @@
   }
 
   /* Mirrored version of the bob — used on the choose-pond guide when the
-     next pond is on the right half. genie-2.png points up-left in its
+     next pond is on the right half. genie-2.webp points up-left in its
      native pose; flipping it horizontally makes the finger point up-right
      toward red / green. scaleX(-1) is baked into the keyframes so the bob
      animation doesn't reset the flip on every frame. */
@@ -814,7 +814,7 @@
   /* ===== Start screen ===== */
   .start-banner{
     position:absolute;inset:0;
-    background-image:url('assets/PRE-LBD-2.jpg');
+    background-image:url('assets/PRE-LBD-2.webp');
     background-size:cover;
     background-position:center;
     background-repeat:no-repeat;
@@ -1070,40 +1070,40 @@
   <div class="screen active" id="screen-start">
     <div class="start-banner"></div>
     <button class="lets-go-btn" id="letsGoBtn" aria-label="Let's go">
-      <img src="assets/lets-go.png" alt="Let's go">
+      <img src="assets/lets-go.webp" alt="Let's go">
     </button>
   </div>
 
   <!-- ============ SCREEN: SELECT POND ============ -->
   <div class="screen" id="screen-select">
     <div class="pond" data-color="pink" data-count="8">
-      <img class="pond-shape" src="assets/pond-pink.png" alt="">
+      <img class="pond-shape" src="assets/pond-pink.webp" alt="">
       <div class="pond-fishes" id="fishes-pink"></div>
     </div>
     <div class="pond" data-color="red" data-count="6">
-      <img class="pond-shape" src="assets/pond-red.png" alt="">
+      <img class="pond-shape" src="assets/pond-red.webp" alt="">
       <div class="pond-fishes" id="fishes-red"></div>
     </div>
     <div class="pond" data-color="yellow" data-count="5">
-      <img class="pond-shape" src="assets/pond-yellow.png" alt="">
+      <img class="pond-shape" src="assets/pond-yellow.webp" alt="">
       <div class="pond-fishes" id="fishes-yellow"></div>
     </div>
     <div class="pond" data-color="green" data-count="7">
-      <img class="pond-shape" src="assets/pond-green.png" alt="">
+      <img class="pond-shape" src="assets/pond-green.webp" alt="">
       <div class="pond-fishes" id="fishes-green"></div>
     </div>
 
     <!-- "Choose a pond!" / "Choose the next pond!" -->
     <div class="guide" id="chooseGuide">
       <div class="thought"><span class="thought-text" id="chooseText"></span></div>
-      <img src="assets/genie-1.png" class="genie-img" alt="">
+      <img src="assets/genie-1.webp" class="genie-img" alt="">
     </div>
 
     <!-- Final overlay genie ("Let us count the fish in each pond.") -->
     <div class="dim-overlay" id="finalDim" style="display:none;"></div>
     <div class="guide" id="overlayGuide" style="display:none;">
       <div class="thought"><span class="thought-text" id="overlayText"></span></div>
-      <img src="assets/genie.png" class="genie-img" alt="">
+      <img src="assets/genie.webp" class="genie-img" alt="">
     </div>
   </div>
 
@@ -1129,13 +1129,13 @@
     <!-- "Tap on each fish one by one." -->
     <div class="guide" id="tapGuide" style="display:none;">
       <div class="thought"><span class="thought-text" id="tapText"></span></div>
-      <img src="assets/genie-1.png" class="genie-img" alt="">
+      <img src="assets/genie-1.webp" class="genie-img" alt="">
     </div>
 
     <!-- "Well done!" celebration -->
     <div class="guide" id="doneGuide" style="display:none;">
       <div class="thought"><span class="thought-text" id="doneText"></span></div>
-      <img src="assets/genie-6.png" class="genie-img" alt="">
+      <img src="assets/genie-6.webp" class="genie-img" alt="">
     </div>
   </div>
 
@@ -1171,14 +1171,14 @@
       <div class="win-title">Great Job!</div>
       <div class="win-msg" id="winMsg">You counted all the fish!</div>
       <div class="win-fish">
-        <div class="fish-badge pink"><img src="assets/fish-pink.png" alt=""><span class="cnt">8</span></div>
-        <div class="fish-badge green"><img src="assets/fish-green.png" alt=""><span class="cnt">7</span></div>
-        <div class="fish-badge red"><img src="assets/fish-red.png" alt=""><span class="cnt">6</span></div>
-        <div class="fish-badge yellow"><img src="assets/fish-yellow.png" alt=""><span class="cnt">5</span></div>
+        <div class="fish-badge pink"><img src="assets/fish-pink.webp" alt=""><span class="cnt">8</span></div>
+        <div class="fish-badge green"><img src="assets/fish-green.webp" alt=""><span class="cnt">7</span></div>
+        <div class="fish-badge red"><img src="assets/fish-red.webp" alt=""><span class="cnt">6</span></div>
+        <div class="fish-badge yellow"><img src="assets/fish-yellow.webp" alt=""><span class="cnt">5</span></div>
       </div>
     </div>
 
-    <img class="postlbd-genie" src="assets/genie-6.png" alt="">
+    <img class="postlbd-genie" src="assets/genie-6.webp" alt="">
   </div>
 
 </div>
@@ -1186,10 +1186,10 @@
 <script>
 /* ============ DATA ============ */
 const PONDS = {
-  pink:   { count:8, fish:'assets/fish-pink.png',   pond:'assets/pond-pink.png',   word:'pink' },
-  green:  { count:7, fish:'assets/fish-green.png',  pond:'assets/pond-green.png',  word:'green' },
-  red:    { count:6, fish:'assets/fish-red.png',    pond:'assets/pond-red.png',    word:'red' },
-  yellow: { count:5, fish:'assets/fish-yellow.png', pond:'assets/pond-yellow.png', word:'yellow' }
+  pink:   { count:8, fish:'assets/fish-pink.webp',   pond:'assets/pond-pink.webp',   word:'pink' },
+  green:  { count:7, fish:'assets/fish-green.webp',  pond:'assets/pond-green.webp',  word:'green' },
+  red:    { count:6, fish:'assets/fish-red.webp',    pond:'assets/pond-red.webp',    word:'red' },
+  yellow: { count:5, fish:'assets/fish-yellow.webp', pond:'assets/pond-yellow.webp', word:'yellow' }
 };
 
 /* Animated fish (WebP) used ONLY during the jump (pop + flight to counter). */
@@ -1415,7 +1415,7 @@ function playFishCollect(){
    so it works reliably on file://, static hosts, and mobile without CORS
    tainting. Ducking is done with a lightweight JS volume tween. Starts only
    after a user gesture (the "Let's go" tap) per browser autoplay rules. */
-const BGM_SRC      = 'music/BG%20Music%209.mp3';
+const BGM_SRC      = 'music/BG%20Music%209.ogg';
 const BGM_BASE     = 0.20;   // normal background level (~20%)
 const BGM_WIN      = 0.30;   // a touch louder on the win screen for excitement
 const BGM_DUCK_MUL = 0.35;   // ducked level = base × this, while VO/SFX play
@@ -1484,7 +1484,7 @@ function stopBgMusic(){
    WIN SCREEN MUSIC
 ========================= */
 
-const WIN_MUSIC_SRC = 'music/Golden Fish Win (1).mp3';
+const WIN_MUSIC_SRC = 'music/Golden Fish Win (1).ogg';
 
 let winMusic = null;
 
@@ -1961,7 +1961,7 @@ async function runChoosePondGuide(isNext = false){
   const guide = document.getElementById('chooseGuide');
   const genieImg = guide.querySelector('.genie-img');
   const text = isNext ? 'Choose the next pond!' : 'Choose a pond!';
-  if (genieImg) genieImg.src = isNext ? 'assets/genie-2.png' : 'assets/genie-1.png';
+  if (genieImg) genieImg.src = isNext ? 'assets/genie-2.webp' : 'assets/genie-1.webp';
 
   /* Both "Choose a pond!" and "Choose the next pond!" share the same
      bottom-left genie placement from CSS. Pass `false` so positionChooseGuide
@@ -2605,9 +2605,9 @@ async function runSummarySequence(){
    Runs during the start screen while the child reads the banner. */
 function preloadImages(){
   const urls = [
-    'assets/bg.png', 'assets/lets-go.png', 'assets/thought-box.svg',
-    'assets/Swipe%20Up%20And%20Click%202.svg', 'assets/PRE-LBD-2.jpg',
-    'assets/genie.png', 'assets/genie-1.png', 'assets/genie-2.png', 'assets/genie-6.png'
+    'assets/bg.webp', 'assets/lets-go.webp', 'assets/thought-box.svg',
+    'assets/Swipe%20Up%20And%20Click%202.svg', 'assets/PRE-LBD-2.webp',
+    'assets/genie.webp', 'assets/genie-1.webp', 'assets/genie-2.webp', 'assets/genie-6.webp'
   ];
   Object.values(PONDS).forEach(p => urls.push(p.fish, p.pond));
   Object.values(PONDS_GIF).forEach(u => urls.push(u));
@@ -2666,6 +2666,6 @@ document.getElementById('letsGoBtn').addEventListener('click', async () => {
 document.addEventListener('click', ensureAudio, { once:true });
 </script>
 <!-- Dev-only screen navigator. Remove this line to disable. -->
-<script src="debug.js"></script>
+<!-- <script src="debug.js"></script> -->
 </body>
 </html>
