@@ -8,9 +8,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="theme-color" content="#06416e" />
 <title>Fish Counting Game</title>
+<!-- Start-screen artwork first: CSS backgrounds are fetched at LOW priority by
+     default, so without these hints the banner waits behind every other asset. -->
+<link rel="preload" as="image" href="assets/Bgm.webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/GogoStart.webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/lets-go.webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/bg.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+<!-- Load the font stylesheet without blocking first paint: fetched as print
+     (non-blocking), promoted to all once ready. display=swap in the URL keeps
+     text visible in the fallback font meanwhile. -->
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lilita+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lilita+One&display=swap" rel="stylesheet"></noscript>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;overflow:hidden;font-family:'Lilita One','Comic Sans MS',system-ui,sans-serif;}
@@ -814,28 +824,59 @@
   /* ===== Start screen ===== */
   .start-banner{
     position:absolute;inset:0;
-    background-image:url('assets/PRE-LBD-2.webp');
+    background-image:url('assets/Bgm.webp');
     background-size:cover;
     background-position:center;
     background-repeat:no-repeat;
   }
+  /* Winking genie floating on the open left half of the banner, pointing at
+     the title. Decorative only — taps pass through to the screen. */
+  .start-genie{
+    position:absolute;
+    left:4%;bottom:3%;
+    height:78%;
+    pointer-events:none;
+    filter:drop-shadow(0 10px 16px rgba(0,0,0,.25));
+    animation:genieFloat 3.2s ease-in-out infinite;
+  }
+  @keyframes genieFloat{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-2.5%);}
+  }
   .lets-go-btn{
     position:absolute;
-    right:3%;bottom:5%;
+    /* Centered under the "COUNT THE FISH" title block. */
+    left:55%;bottom:12%;
     width:23%;
     cursor:pointer;
     background:transparent;border:none;padding:0;
-    filter:drop-shadow(0 8px 14px rgba(0,0,0,.3));
+    /* Light-blue highlight glow so the button pops against the sand. */
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.3))
+           drop-shadow(0 0 6px rgba(160,225,255,1))
+           drop-shadow(0 0 14px rgba(160,225,255,.9))
+           drop-shadow(0 0 30px rgba(160,225,255,.65));
+    animation:letsGoGlow 1.6s ease-in-out infinite;
     transition:transform .2s ease;
     z-index:10;
     line-height:0;
   }
   .lets-go-btn img{width:100%;height:auto;display:block;}
-  .lets-go-btn:hover{animation:letsGoPulse 1s ease-in-out infinite;}
+  .lets-go-btn:hover{animation:letsGoGlow 1.6s ease-in-out infinite, letsGoPulse 1s ease-in-out infinite;}
   .lets-go-btn:active{transform:scale(.95);}
   @keyframes letsGoPulse{
     0%,100%{transform:scale(1);}
     50%{transform:scale(1.08);}
+  }
+  /* Breathing light-blue glow — draws the eye to the start button. The dim
+     and bright phases are far apart so the pulse reads clearly. */
+  @keyframes letsGoGlow{
+    0%,100%{filter:drop-shadow(0 8px 14px rgba(0,0,0,.3))
+                   drop-shadow(0 0 5px rgba(160,225,255,.55))
+                   drop-shadow(0 0 10px rgba(160,225,255,.35));}
+    50%{filter:drop-shadow(0 8px 14px rgba(0,0,0,.3))
+               drop-shadow(0 0 8px rgba(160,225,255,1))
+               drop-shadow(0 0 18px rgba(160,225,255,.95))
+               drop-shadow(0 0 42px rgba(160,225,255,.8));}
   }
 
   /* ===== Post-LBD WIN screen — an underwater, magical, kid-friendly grand
@@ -1069,41 +1110,42 @@
   <!-- ============ SCREEN: START BANNER ============ -->
   <div class="screen active" id="screen-start">
     <div class="start-banner"></div>
+    <img class="start-genie" src="assets/GogoStart.webp" alt="" fetchpriority="high" decoding="async">
     <button class="lets-go-btn" id="letsGoBtn" aria-label="Let's go">
-      <img src="assets/lets-go.webp" alt="Let's go">
+      <img src="assets/lets-go.webp" alt="Let's go" fetchpriority="high" decoding="async">
     </button>
   </div>
 
   <!-- ============ SCREEN: SELECT POND ============ -->
   <div class="screen" id="screen-select">
     <div class="pond" data-color="pink" data-count="8">
-      <img class="pond-shape" src="assets/pond-pink.webp" alt="">
+      <img class="pond-shape" src="assets/pond-pink.webp" alt="" loading="lazy" decoding="async">
       <div class="pond-fishes" id="fishes-pink"></div>
     </div>
     <div class="pond" data-color="red" data-count="6">
-      <img class="pond-shape" src="assets/pond-red.webp" alt="">
+      <img class="pond-shape" src="assets/pond-red.webp" alt="" loading="lazy" decoding="async">
       <div class="pond-fishes" id="fishes-red"></div>
     </div>
     <div class="pond" data-color="yellow" data-count="5">
-      <img class="pond-shape" src="assets/pond-yellow.webp" alt="">
+      <img class="pond-shape" src="assets/pond-yellow.webp" alt="" loading="lazy" decoding="async">
       <div class="pond-fishes" id="fishes-yellow"></div>
     </div>
     <div class="pond" data-color="green" data-count="7">
-      <img class="pond-shape" src="assets/pond-green.webp" alt="">
+      <img class="pond-shape" src="assets/pond-green.webp" alt="" loading="lazy" decoding="async">
       <div class="pond-fishes" id="fishes-green"></div>
     </div>
 
     <!-- "Choose a pond!" / "Choose the next pond!" -->
     <div class="guide" id="chooseGuide">
       <div class="thought"><span class="thought-text" id="chooseText"></span></div>
-      <img src="assets/genie-1.webp" class="genie-img" alt="">
+      <img src="assets/genie-1.webp" class="genie-img" alt="" loading="lazy" decoding="async">
     </div>
 
     <!-- Final overlay genie ("Let us count the fish in each pond.") -->
     <div class="dim-overlay" id="finalDim" style="display:none;"></div>
     <div class="guide" id="overlayGuide" style="display:none;">
       <div class="thought"><span class="thought-text" id="overlayText"></span></div>
-      <img src="assets/genie.webp" class="genie-img" alt="">
+      <img src="assets/genie.webp" class="genie-img" alt="" loading="lazy" decoding="async">
     </div>
   </div>
 
@@ -1129,13 +1171,13 @@
     <!-- "Tap on each fish one by one." -->
     <div class="guide" id="tapGuide" style="display:none;">
       <div class="thought"><span class="thought-text" id="tapText"></span></div>
-      <img src="assets/genie-1.webp" class="genie-img" alt="">
+      <img src="assets/genie-1.webp" class="genie-img" alt="" loading="lazy" decoding="async">
     </div>
 
     <!-- "Well done!" celebration -->
     <div class="guide" id="doneGuide" style="display:none;">
       <div class="thought"><span class="thought-text" id="doneText"></span></div>
-      <img src="assets/genie-6.webp" class="genie-img" alt="">
+      <img src="assets/genie-6.webp" class="genie-img" alt="" loading="lazy" decoding="async">
     </div>
   </div>
 
@@ -1171,14 +1213,14 @@
       <div class="win-title">Great Job!</div>
       <div class="win-msg" id="winMsg">You counted all the fish!</div>
       <div class="win-fish">
-        <div class="fish-badge pink"><img src="assets/fish-pink.webp" alt=""><span class="cnt">8</span></div>
-        <div class="fish-badge green"><img src="assets/fish-green.webp" alt=""><span class="cnt">7</span></div>
-        <div class="fish-badge red"><img src="assets/fish-red.webp" alt=""><span class="cnt">6</span></div>
-        <div class="fish-badge yellow"><img src="assets/fish-yellow.webp" alt=""><span class="cnt">5</span></div>
+        <div class="fish-badge pink"><img src="assets/fish-pink.webp" alt="" loading="lazy" decoding="async"><span class="cnt">8</span></div>
+        <div class="fish-badge green"><img src="assets/fish-green.webp" alt="" loading="lazy" decoding="async"><span class="cnt">7</span></div>
+        <div class="fish-badge red"><img src="assets/fish-red.webp" alt="" loading="lazy" decoding="async"><span class="cnt">6</span></div>
+        <div class="fish-badge yellow"><img src="assets/fish-yellow.webp" alt="" loading="lazy" decoding="async"><span class="cnt">5</span></div>
       </div>
     </div>
 
-    <img class="postlbd-genie" src="assets/genie-6.webp" alt="">
+    <img class="postlbd-genie" src="assets/genie-6.webp" alt="" loading="lazy" decoding="async">
   </div>
 
 </div>
@@ -1741,6 +1783,10 @@ function fillSelectionPonds(){
     wrap.innerHTML = '';
     FISH_POSITIONS[color].forEach((pos, i) => {
       const img = document.createElement('img');
+      /* Lazy: these live in the hidden select screen — don't let them compete
+         with the start banner. Set before src so the browser honours it. */
+      img.loading = 'lazy';
+      img.decoding = 'async';
       img.src = PONDS[color].fish;
       img.style.left = pos.x + '%';
       img.style.top  = pos.y + '%';
@@ -2606,7 +2652,7 @@ async function runSummarySequence(){
 function preloadImages(){
   const urls = [
     'assets/bg.webp', 'assets/lets-go.webp', 'assets/thought-box.svg',
-    'assets/Swipe%20Up%20And%20Click%202.svg', 'assets/PRE-LBD-2.webp',
+    'assets/Swipe%20Up%20And%20Click%202.svg',
     'assets/genie.webp', 'assets/genie-1.webp', 'assets/genie-2.webp', 'assets/genie-6.webp'
   ];
   Object.values(PONDS).forEach(p => urls.push(p.fish, p.pond));
@@ -2623,7 +2669,14 @@ function preloadImages(){
     a.preload = 'auto';
   });
 }
-preloadImages();
+/* Run fn once the window 'load' event has fired — i.e. the start screen's own
+   assets are done — or immediately if it already has. Everything scheduled
+   through this stays out of the start banner's bandwidth. */
+function whenLoaded(fn){
+  if (document.readyState === 'complete') fn();
+  else window.addEventListener('load', fn, { once:true });
+}
+whenLoaded(preloadImages);
 
 /* ============ INIT ============ */
 fillSelectionPonds();
@@ -2631,12 +2684,13 @@ fillSelectionPonds();
 /* 0.5s after the page loads, start the background music and greet the child
    with the banner VO. Both attempt to autoplay; if the browser blocks audio
    until a user gesture, startBgMusic retries on the first interaction and the
-   banner line falls back the same way. */
-setTimeout(() => {
+   banner line falls back the same way. The music file is ~3 MB, so it too
+   waits for 'load' rather than racing the banner artwork. */
+whenLoaded(() => setTimeout(() => {
   ensureAudio();
   startBgMusic();
   tryAutoplayBannerVO();
-}, 500);
+}, 500));
 
 /* First tap anywhere on the banner scene only unlocks audio (required by
    browser autoplay policy) — it does NOT replay the banner line. Taps on the
@@ -2646,7 +2700,16 @@ document.getElementById('screen-start').addEventListener('pointerdown', (e) => {
   ensureAudio();
 });
 
-document.getElementById('letsGoBtn').addEventListener('click', async () => {
+/* Re-entry guard: the start sequence is a long async chain (banner VO wait →
+   screen swap → "Let us count" overlay). Without this, a double-tap on the
+   button runs the chain twice — the second run's VO cuts the first line off
+   mid-sentence and then replays it. */
+let startSequenceRun = false;
+document.getElementById('letsGoBtn').addEventListener('click', async (e) => {
+  if (startSequenceRun) return;
+  startSequenceRun = true;
+  e.currentTarget.disabled = true;
+
   ensureAudio();
   startBgMusic();
 
