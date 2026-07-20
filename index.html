@@ -1177,7 +1177,7 @@
     <!-- "Well done!" celebration -->
     <div class="guide" id="doneGuide" style="display:none;">
       <div class="thought"><span class="thought-text" id="doneText"></span></div>
-      <img src="assets/genie-6.webp" class="genie-img" alt="" loading="lazy" decoding="async">
+      <img src="assets/successGogo.webp" class="genie-img" alt="" loading="lazy" decoding="async">
     </div>
   </div>
 
@@ -1220,7 +1220,7 @@
       </div>
     </div>
 
-    <img class="postlbd-genie" src="assets/genie-6.webp" alt="" loading="lazy" decoding="async">
+    <img class="postlbd-genie" src="assets/successGogo.webp" alt="" loading="lazy" decoding="async">
   </div>
 
 </div>
@@ -1562,36 +1562,23 @@ function playWinMusic(){
   }
 }
 
-function playApplause(durationMs = 1800){
-  ensureAudio();
-  const claps = 42;
-  const dur = durationMs / 1000;
-  for (let i = 0; i < claps; i++){
-    const baseDelay = (i / claps) * dur;
-    const jitter = (Math.random() - .5) * (dur / claps) * 1.6;
-    const delay = Math.max(0, baseDelay + jitter);
-
-    const len = Math.floor(audioCtx.sampleRate * 0.08);
-    const buffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let j = 0; j < data.length; j++){
-      data[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / len, 3);
+/* Recorded clap/applause (music/clapSound.ogg, ~2s) — plays whenever the
+   clapping successGogo appears. One reusable element, rewound on each play,
+   is enough since celebrations never overlap. Same plain-<audio> path as the
+   music tracks (works on file:// and static hosts, no WebAudio/CORS issues). */
+const CLAP_SFX_SRC = 'music/clapSound.ogg';
+let clapSfx = null;
+function playApplause(){
+  try{
+    if (!clapSfx){
+      clapSfx = new Audio(CLAP_SFX_SRC);
+      clapSfx.preload = 'auto';
+      clapSfx.volume = 0.9;
     }
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-
-    const bp = audioCtx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.value = 1100 + Math.random() * 1600;
-    bp.Q.value = 1.1 + Math.random() * 0.6;
-
-    const g = audioCtx.createGain();
-    const envelope = Math.sin((i / claps) * Math.PI);
-    g.gain.value = 0.05 + envelope * 0.06;
-
-    noise.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
-    noise.start(audioCtx.currentTime + delay);
-  }
+    clapSfx.currentTime = 0;
+    const p = clapSfx.play();
+    if (p && p.catch) p.catch(()=>{});
+  }catch(e){}
 }
 
 function playSuccess(){
@@ -2440,7 +2427,7 @@ async function showPostLbd(){
      fish" VO from the summary finale carries over into this screen, so we
      don't layer a second narration line on top of it here. */
   playSuccess();
-  setTimeout(() => playApplause(2600), 150);
+  setTimeout(() => playApplause(), 150);
 
   /* Water-themed bubble confetti in the four game colours — one big burst
      then two follow-ups. */
@@ -2494,7 +2481,7 @@ async function showDoneCelebration(text){
 
   /* Duck the music under the applause celebration, restore when it ends. */
   duckBgm();
-  playApplause(1800);
+  playApplause();
 
   /* The "{n} {colour} fishes" line has already finished (awaited in
      onPondComplete), so we only pause briefly for the genie to pop in before
@@ -2653,7 +2640,7 @@ function preloadImages(){
   const urls = [
     'assets/bg.webp', 'assets/lets-go.webp', 'assets/thought-box.svg',
     'assets/Swipe%20Up%20And%20Click%202.svg',
-    'assets/genie.webp', 'assets/genie-1.webp', 'assets/genie-2.webp', 'assets/genie-6.webp'
+    'assets/genie.webp', 'assets/genie-1.webp', 'assets/genie-2.webp', 'assets/successGogo.webp'
   ];
   Object.values(PONDS).forEach(p => urls.push(p.fish, p.pond));
   Object.values(PONDS_GIF).forEach(u => urls.push(u));
@@ -2668,6 +2655,14 @@ function preloadImages(){
     const a = new Audio(VO_DIR + encodeURIComponent(file));
     a.preload = 'auto';
   });
+
+  /* Warm the clap SFX the same way — it first plays at the first
+     pond-complete celebration, right as the successGogo pops in. */
+  if (!clapSfx){
+    clapSfx = new Audio(CLAP_SFX_SRC);
+    clapSfx.preload = 'auto';
+    clapSfx.volume = 0.9;
+  }
 }
 /* Run fn once the window 'load' event has fired — i.e. the start screen's own
    assets are done — or immediately if it already has. Everything scheduled
