@@ -822,8 +822,19 @@
   .caption.show{opacity:1;}
 
   /* ===== Start screen ===== */
+  /* The start screen is active on first paint. The generic .screen fade-in
+     would ramp its opacity from 0, briefly revealing the #game backdrop
+     behind the banner on load — so we skip the entry animation here (this
+     screen is only ever shown once). Other screens keep their fade. */
+  #screen-start.active{animation:none;}
   .start-banner{
     position:absolute;inset:0;
+    /* Opaque sky-blue fallback painted synchronously so the sandy #game
+       backdrop (bg.webp, a tiny file that decodes almost instantly) can never
+       flash through this transparent layer while the larger title artwork
+       (Bgm.webp) is still decoding. Matches the banner's sky, so the swap-in
+       is seamless. */
+    background-color:#4aa8f2;
     background-image:url('assets/Bgm.webp');
     background-size:cover;
     background-position:center;
@@ -833,7 +844,7 @@
      the title. Decorative only — taps pass through to the screen. */
   .start-genie{
     position:absolute;
-    left:4%;bottom:3%;
+    left:10%;bottom:3%;
     height:78%;
     pointer-events:none;
     filter:drop-shadow(0 10px 16px rgba(0,0,0,.25));
@@ -882,10 +893,63 @@
   /* ===== Post-LBD WIN screen — an underwater, magical, kid-friendly grand
      finale. Deep-ocean backdrop with light rays + swaying sea plants, a
      glossy water-glass reward panel, fish "collectible" bubbles showing each
-     count, a big celebrating Genie, and rising 4-colour bubbles. No replay
-     control; this is the module's rewarding end state. */
+     count, a big celebrating Genie, and rising 4-colour bubbles, plus a
+     "Next" button to advance out of the module. */
   #screen-postlbd{display:none;overflow:hidden;}
   #screen-postlbd.active{display:block;}
+
+  /* "Next" button — glossy green pill in the bottom-right, clear of the
+     celebrating genie (bottom-left) and the reward panel (centre). Hidden
+     until the celebration settles, then popped in via the .show class. */
+  .win-next-btn{
+    position:absolute;
+    right:5%;bottom:9%;
+    z-index:9;
+    display:inline-flex;align-items:center;gap:.5em;
+    padding:.7em 1.5em;
+    font-family:'Lilita One','Comic Sans MS',system-ui,sans-serif;
+    font-size:clamp(18px,2.2vw,34px);
+    color:#fff;
+    letter-spacing:.02em;
+    cursor:pointer;
+    border:2px solid rgba(255,255,255,.85);
+    border-radius:999px;
+    background:linear-gradient(180deg,#5fe08a 0%,#25b45c 55%,#159447 100%);
+    box-shadow:0 10px 22px rgba(0,40,25,.4),
+               inset 0 2px 6px rgba(255,255,255,.55),
+               inset 0 -6px 12px rgba(0,70,35,.4);
+    text-shadow:0 2px 3px rgba(0,60,30,.45);
+    /* Hidden until revealed. */
+    opacity:0;transform:translateY(24px) scale(.9);pointer-events:none;
+    transition:transform .2s ease;
+  }
+  .win-next-btn svg{width:.9em;height:.9em;fill:#fff;display:block;
+    filter:drop-shadow(0 2px 2px rgba(0,60,30,.4));}
+  .win-next-btn.show{
+    pointer-events:auto;
+    animation:winNextIn .5s cubic-bezier(.22,1.3,.6,1) forwards,
+              winNextGlow 1.8s ease-in-out .55s infinite;
+  }
+  .win-next-btn.show:hover{transform:scale(1.06);}
+  .win-next-btn.show:active{transform:scale(.94);}
+  @keyframes winNextIn{
+    from{opacity:0;transform:translateY(24px) scale(.9);}
+    to  {opacity:1;transform:translateY(0) scale(1);}
+  }
+  @keyframes winNextGlow{
+    0%,100%{box-shadow:0 10px 22px rgba(0,40,25,.4),
+                       inset 0 2px 6px rgba(255,255,255,.55),
+                       inset 0 -6px 12px rgba(0,70,35,.4),
+                       0 0 6px rgba(150,255,190,.5);}
+    50%    {box-shadow:0 10px 22px rgba(0,40,25,.4),
+                       inset 0 2px 6px rgba(255,255,255,.55),
+                       inset 0 -6px 12px rgba(0,70,35,.4),
+                       0 0 16px rgba(150,255,190,.95),
+                       0 0 34px rgba(120,240,170,.7);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .win-next-btn.show{animation:none;opacity:1;transform:none;}
+  }
 
   /* Layer 1 — deep underwater gradient + central glow. */
   .ocean-bg{
@@ -1221,6 +1285,13 @@
     </div>
 
     <img class="postlbd-genie" src="assets/successGogo.webp" alt="" loading="lazy" decoding="async">
+
+    <!-- Advance to the next activity. Hidden until the celebration settles,
+         then popped in (see showPostLbd). -->
+    <button class="win-next-btn" id="winNextBtn" type="button" aria-label="Next">
+      <span>Next</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 4l10 8-10 8z"/></svg>
+    </button>
   </div>
 
 </div>
@@ -1468,6 +1539,13 @@ let bgmBaseLevel = BGM_BASE;  // level to return to after ducking
 let bgmDuckHolds = 0;         // ref-count of active duck requests
 let bgmTween = null;          // active volume-tween interval
 
+/* The Golden-Fish win track (created lazily in playWinMusic) is also ducked
+   under dialogue, so narration on the win screen is never drowned out.
+   winMusicBaseLevel is the level it returns to when no duck is held; 0 means
+   the track isn't playing, so ducking skips it. */
+let winMusicBaseLevel = 0;
+let winTween = null;          // active win-music volume-tween interval
+
 /* Smoothly tween the <audio> element volume to `level` over `ramp` seconds. */
 function setBgmLevel(level, ramp = 0.4){
   if (!bgmEl) return;
@@ -1483,15 +1561,37 @@ function setBgmLevel(level, ramp = 0.4){
   }, 40);
 }
 
+/* Smoothly tween the win-music <audio> element volume, mirroring setBgmLevel
+   so the win track can be ducked under dialogue on the win screen. */
+function setWinLevel(level, ramp = 0.4){
+  if (!winMusic) return;
+  level = Math.max(0, Math.min(1, level));
+  if (winTween){ clearInterval(winTween); winTween = null; }
+  const start = winMusic.volume;
+  const dur = Math.max(1, ramp * 1000);
+  const t0 = performance.now();
+  winTween = setInterval(() => {
+    const k = Math.min(1, (performance.now() - t0) / dur);
+    winMusic.volume = start + (level - start) * k;
+    if (k >= 1){ clearInterval(winTween); winTween = null; }
+  }, 40);
+}
+
 /* Lower the music while something important is playing; restore when the last
-   hold is released. Ref-counted so overlapping VO/SFX don't restore early. */
+   hold is released. Ref-counted so overlapping VO/SFX don't restore early.
+   Both the looping background track AND the win track (when playing) are
+   ducked, so dialogue is clear no matter which is underneath it. */
 function duckBgm(){
   bgmDuckHolds++;
   setBgmLevel(bgmBaseLevel * BGM_DUCK_MUL, 0.2);
+  if (winMusicBaseLevel > 0) setWinLevel(winMusicBaseLevel * BGM_DUCK_MUL, 0.2);
 }
 function releaseBgm(){
   bgmDuckHolds = Math.max(0, bgmDuckHolds - 1);
-  if (bgmDuckHolds === 0) setBgmLevel(bgmBaseLevel, 0.6);
+  if (bgmDuckHolds === 0){
+    setBgmLevel(bgmBaseLevel, 0.6);
+    if (winMusicBaseLevel > 0) setWinLevel(winMusicBaseLevel, 0.6);
+  }
 }
 
 function startBgMusic(){
@@ -1546,16 +1646,13 @@ function playWinMusic(){
     winMusic.volume = 0;
     winMusic.play();
 
-    // smooth fade in
-    let v = 0;
-    const fade = setInterval(()=>{
-      v += 0.03;
-      if(v >= 0.42){
-        v = 0.42;
-        clearInterval(fade);
-      }
-      winMusic.volume = v;
-    }, 80);
+    /* Register the track's normal level so duck/release can manage it, then
+       fade in. If a dialogue duck is already held (the "counted all the fish"
+       line carries over from the summary), fade to the ducked level so the
+       narration stays clear; release will lift it back to full afterwards. */
+    winMusicBaseLevel = 0.42;
+    const target = bgmDuckHolds > 0 ? winMusicBaseLevel * BGM_DUCK_MUL : winMusicBaseLevel;
+    setWinLevel(target, 1.4);
 
   }catch(e){
     console.log(e);
@@ -2465,7 +2562,28 @@ async function showPostLbd(){
     spawnSparkles(cx, cy, stage, 18);
     setTimeout(() => spawnSparkles(cx, cy, stage, 16), 500);
   }, 2200);
+
+  /* Reveal the "Next" button once the celebration has settled. */
+  const nextBtn = document.getElementById('winNextBtn');
+  if (nextBtn) setTimeout(() => nextBtn.classList.add('show'), 2600);
 }
+
+/* "Next" button on the win screen — signals the host/container that the
+   activity is complete so it can advance to the next one. postMessage is a
+   no-op when the game runs standalone (no parent listening), so this is safe
+   either way. Guarded against double taps. */
+let nextSignalled = false;
+document.getElementById('winNextBtn').addEventListener('click', () => {
+  if (nextSignalled) return;
+  nextSignalled = true;
+  const payload = { type: 'GAME_COMPLETE', game: 'count-the-fish' };
+  try { window.parent && window.parent.postMessage(payload, '*'); } catch(e){}
+  try {
+    if (window.parent !== window.top && window.top){
+      window.top.postMessage(payload, '*');
+    }
+  } catch(e){}
+});
 
 /* ============ COUNTING DONE CELEBRATION ============ */
 async function showDoneCelebration(text){
