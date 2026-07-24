@@ -32,6 +32,10 @@
     touch-action:manipulation;
     overscroll-behavior:none;
   }
+  /* Game sprites must never become browser drag-and-drop payloads (ghost
+     image dragged into a new tab). Firefox ignores -webkit-user-drag, so a
+     global dragstart preventDefault in the script backs this up. */
+  img,svg,a{-webkit-user-drag:none;}
 
   /* ===== Locked 16:9 stage — all internal layout is in % of this frame ===== */
   #game{
@@ -1297,6 +1301,11 @@
 </div>
 
 <script>
+/* Kill native drag-and-drop for every element, including fish/genie images
+   created later at runtime — the CSS -webkit-user-drag guard doesn't reach
+   Firefox. Without this a fast swipe can drag a sprite into a new tab. */
+document.addEventListener('dragstart', e => e.preventDefault());
+
 /* ============ DATA ============ */
 const PONDS = {
   pink:   { count:8, fish:'assets/fish-pink.webp',   pond:'assets/pond-pink.webp',   word:'pink' },
@@ -1706,11 +1715,11 @@ const NUMBER_VO = {
   1:'one.ogg', 2:'two.ogg', 3:'three.ogg', 4:'four.ogg', 5:'five.ogg',
   6:'six.ogg', 7:'seven.ogg', 8:'eight.ogg', 9:'nine.ogg'
 };
-/* "{count} {colour} fishes" — used on pond-complete and on the summary rows.
+/* "{count} {colour} fish" — used on pond-complete and on the summary rows.
    Recorded counts match the pond targets (pink 8, green 7, red 6, yellow 5). */
 const POND_COUNT_VO = {
-  pink:'8 pink fishes.ogg', green:'7 green fishes.ogg',
-  red:'6 red fishes.ogg',  yellow:'5 yellow fishes.ogg'
+  pink:'8 pink fish.mp3', green:'7 green fish.mp3',
+  red:'6 red fish.mp3',  yellow:'5 yellow fish.mp3'
 };
 const VO = {
   choosePond:  'chose a pond.ogg',
@@ -2404,7 +2413,7 @@ async function onPondComplete(){
   const selPond = document.querySelector('.pond[data-color="' + currentColor + '"]');
   if (selPond) selPond.classList.add('completed');
 
-  /* Let the "{n} {colour} fishes" line play to the END before the celebration
+  /* Let the "{n} {colour} fish" line play to the END before the celebration
      genie appears and says "Well done!", so the count is clearly heard first
      and the two lines never talk over each other. Capped so a slow or blocked
      clip can't stall the flow. */
@@ -2601,7 +2610,7 @@ async function showDoneCelebration(text){
   duckBgm();
   playApplause();
 
-  /* The "{n} {colour} fishes" line has already finished (awaited in
+  /* The "{n} {colour} fish" line has already finished (awaited in
      onPondComplete), so we only pause briefly for the genie to pop in before
      it speaks "Well done!". */
   await wait(350);
@@ -2669,10 +2678,10 @@ async function runSummarySequence(){
   await wait(900);
 
   const seq = [
-    { color:'pink',   text:'8 pink fishes' },
-    { color:'green',  text:'7 green fishes' },
-    { color:'red',    text:'6 red fishes' },
-    { color:'yellow', text:'5 yellow fishes' }
+    { color:'pink',   text:'8 pink fish' },
+    { color:'green',  text:'7 green fish' },
+    { color:'red',    text:'6 red fish' },
+    { color:'yellow', text:'5 yellow fish' }
   ];
 
   const stage = document.getElementById('game');
@@ -2766,7 +2775,7 @@ function preloadImages(){
 
   urls.forEach(src => { const img = new Image(); img.src = src; });
 
-  /* Warm the "{n} {colour} fishes" voice clips too — these play for the first
+  /* Warm the "{n} {colour} fish" voice clips too — these play for the first
      time at pond-complete, so without a warm cache the first one can lag and
      get clipped. preload='auto' fetches without playing. */
   Object.values(POND_COUNT_VO).forEach(file => {
